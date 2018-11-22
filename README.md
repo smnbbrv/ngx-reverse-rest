@@ -125,13 +125,8 @@ Here the users could be received from different endpoints.
 import { Component, OnInit } from '@angular/core';
 import { BackendService } from './backend-service';
 
-@ReverseRestClass({
-  urls: [
-    '/api/rest/v1/users',
-    '/api/rest/v1/users/:id',
-    '/api/rest/v1/system/:systemId/users',
-    '/api/rest/v1/system/:systemId/users/:id'
-  ],
+@Component({
+  // ...
 })
 class UserDetailComponent implements OnInit {
 
