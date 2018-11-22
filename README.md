@@ -119,6 +119,25 @@ class User {
 
 Here the users could be received from different endpoints.
 
+### Provide decorators
+
+Provide `ReverseRestClasses` configuration object in your `AppModule`. As long as decorator `ReverseRestClass` is used, the `DecoratorReverseRestClasses` is going to be used as provided value:
+
+```ts
+import { DecoratorReverseRestClasses, ReverseRestClasses } from 'ngx-reverse-rest';
+
+@NgModule({
+  // ...
+  providers: [
+    { provide: ReverseRestClasses, useValue: DecoratorReverseRestClasses },
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
+
+You can provide your custom configuration object instead and omit using the decorator.
+
 ### Send and receive
 
 ```ts
