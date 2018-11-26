@@ -4,8 +4,6 @@ The Angular REST library that thinks differently.
 
 Leightweight, fully tested and as flexible as it could be (with DI in its heart).
 
-> This is an experimental phase. Use on your own risk!
-
 ## What it is about
 
 Terms:
