@@ -4,6 +4,9 @@ The Angular REST library that thinks differently.
 
 Leightweight, fully tested and as flexible as it could be (with DI in its heart).
 
+[![Build Status](https://travis-ci.org/smnbbrv/ngx-reverse-rest.svg?branch=master)](https://travis-ci.org/smnbbrv/ngx-reverse-rest)
+[![Coverage Status](https://coveralls.io/repos/github/smnbbrv/ngx-reverse-rest/badge.svg?branch=master)](https://coveralls.io/github/smnbbrv/ngx-reverse-rest?branch=master)
+
 ## What it is about
 
 Terms:
