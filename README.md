@@ -26,15 +26,25 @@ npm i ngx-reverse-rest
 
 ## Usage
 
-### BackendService
+### 1. Add module to the app.module.ts
 
-First, create a REST Service that will be (most likely) the only one you have:
+```ts
+imports: [
+  // ...
+  ReverseRestModule,
+  // ...
+]
+```
+
+### 2. BackendService
+
+Create a REST Service that will be (most likely) the only one you have:
 
 ```ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { ReverseRestRequest, ReverseRestUrlService } from 'ngx-reverse-rest';
+import { ReverseRestClass, ReverseRestRequest, ReverseRestUtils } from 'ngx-reverse-rest';
 
 @Injectable({
   providedIn: 'root'
@@ -43,134 +53,100 @@ export class BackendService {
 
   constructor(
     private http: HttpClient,
-    private rrUrlService: ReverseRestUrlService,
+    private utils: ReverseRestUtils,
   ) { }
 
-  getArray<T>(params: ReverseRestRequest<T>) {
-    return this.http.get<T[]>(
-      this.rrUrlService.resolveUrl(params),
-      { params: params.query, headers: params.headers }
-    ).pipe(map(r => r.map(i => new params.class(i))));
+  getArray<T>(clss: ReverseRestClass<T>, params: ReverseRestRequest = {}) {
+    return this.http.get<T[]>(this.utils.resolveUrl(params), this.utils.getHttpOptions(params))
+      .pipe(map(r => r.map(i => new clss(i))));
   }
 
-  get<T>(params: ReverseRestRequest<T>) {
-    return this.http.get(
-      this.rrUrlService.resolveUrl(params),
-      { params: params.query, headers: params.headers }
-    ).pipe(map(r => new params.class(r)));
+  get<T>(clss: ReverseRestClass<T>, params: ReverseRestRequest = {}) {
+    return this.http.get<T>(this.utils.resolveUrl(clss, params.path), this.utils.getHttpOptions(params))
+      .pipe(map(r => new clss(r)));
   }
 
-  put<T>(params: ReverseRestRequest<T>) {
-    return this.http.put(
-      this.rrUrlService.resolveUrl(params),
-      params.object,
-      { params: params.query, headers: params.headers }
-    ).pipe(map(r => new params.class(r)));
+  put<T>(object: T, params: ReverseRestRequest = {}) {
+    return this.http.put(this.utils.resolveUrl(params), object, this.utils.getHttpOptions(params))
+      .pipe(map(r => new (this.utils.resolveClass(object))(r)));
   }
 
-  post<T>(params: ReverseRestRequest<T>) {
-    return this.http.post(
-      this.rrUrlService.resolveUrl(params),
-      params.object,
-      { params: params.query, headers: params.headers }
-    ).pipe(map(r => new params.class(r)));
+  post<T>(object: T, params: ReverseRestRequest = {}) {
+    return this.http.post(this.utils.resolveUrl(params), object, this.utils.getHttpOptions(params))
+      .pipe(map(r => new (this.utils.resolveClass(object))(r)));
   }
 
-  delete<T>(params: ReverseRestRequest<T>) {
-    return this.http.delete<void>(
-      this.rrUrlService.resolveUrl(params),
-      { params: params.query, headers: params.headers }
-    );
+  delete(params: ReverseRestRequest) {
+    return this.http.delete<void>(this.utils.resolveUrl(params), { params: params.query, headers: params.headers });
   }
 
 }
 ```
 
-### Describe your classes
+### 3. Describe your entities
 
 For each of your DTOs add the endpoint describing where you get them from / send them to:
 
 ```ts
-import { ReverseRestClass } from 'ngx-reverse-rest';
+import { ReverseRestEntity } from 'ngx-reverse-rest';
 
-@ReverseRestClass({
+@ReverseRestEntity({
   urls: [
-    '/api/rest/v1/users',
-    '/api/rest/v1/users/:id',
-    '/api/rest/v1/system/:systemId/users',
-    '/api/rest/v1/system/:systemId/users/:id'
+    '/api/rest/v1/entities',
+    '/api/rest/v1/entities/:id',
+    '/api/rest/v1/entity-groups/:groupId/entities',
+    '/api/rest/v1/entity-groups/:groupId/entities/:id'
   ],
 })
-class User {
+class ExampleEntity {
+  id: string;
+  name: string;
 
-  id?: string;
-  systemIds?: string[];
-  firstname?: string;
-  lastname?: string;
-
-  constructor(dto: User = {}) {
-    this.id = dto.id;
-    this.systemIds = dto.systemIds || [];
-    this.firstname = dto.firstname;
-    this.lastname = dto.lastname;
+  constructor(options: Partial<ExampleEntity> = {}) {
+    this.id = options.id;
+    this.name = options.name;
   }
-
 }
 ```
 
 Here the users could be received from different endpoints.
 
-### Provide decorators
+### 4. Send and receive
 
-Provide `ReverseRestClasses` configuration object in your `AppModule`. As long as decorator `ReverseRestClass` is used, the `DecoratorReverseRestClasses` is going to be used as provided value:
-
-```ts
-import { DecoratorReverseRestClasses, ReverseRestClasses } from 'ngx-reverse-rest';
-
-@NgModule({
-  // ...
-  providers: [
-    { provide: ReverseRestClasses, useValue: DecoratorReverseRestClasses },
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {}
-```
-
-You can provide your custom configuration object instead and omit using the decorator.
-
-### Send and receive
+See app.component.ts in this project:
 
 ```ts
 import { Component, OnInit } from '@angular/core';
 import { BackendService } from './backend-service';
 
 @Component({
-  // ...
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
-class UserDetailComponent implements OnInit {
+export class AppComponent implements OnInit {
 
   constructor(private backend: BackendService) {
   }
 
   ngOnInit() {
-    // get all users
-    this.backend.getArray<User>({ class: User }).subscribe(users => /*...*/);
+    // get by auxiliary path parameter
+    this.backend.getArray(ExampleEntity, { path: { groupId: 'example-group' } }).subscribe(entities => {
+      console.log(entities.map(entity => entity.name));
+    });
 
-    // get the users based on system
-    this.backend.getArray<User>({ class: User, { systemId: 'auth' } }).subscribe(users => /*...*/);
+    // create
+    this.backend.post(new ExampleEntity()).subscribe(entity => {
+      console.log(entity.name);
 
-    // get a particular user
-    this.backend.get<User>({ class: User, path: { id: 'boss' } }).subscribe(user => /*...*/);
+      entity.name = 'new name';
 
-    // create a user
-    this.backend.post<User>({ object: new User({ firstname: 'Firstname' }) }).subscribe(createdUser => {
-      createdUser.lastname = 'Lastname';
+      // update
+      this.backend.put(entity).subscribe(updatedEntity => {
+        console.log(updatedEntity.name);
 
-      // then update this user
-      this.backend.put<User>({ object: createdUser, path: { id: createdUser.id } }).subscribe(updatedUser => {
-        // and finally delete the user
-        this.backend.delete<User>({ path: { id: updatedUser.id } }).subscribe(updatedUser => /*...*/);
+        // delete
+        this.backend.delete({ path: { id: updatedEntity } });
       });
     });
   }
