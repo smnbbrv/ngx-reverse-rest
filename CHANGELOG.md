@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/smnbbrv/ngx-reverse-rest/compare/v2.0.0...v2.1.0) (2019-06-05)
+
+
+### Features
+
+* support angular@8 ([f9e20bb](https://github.com/smnbbrv/ngx-reverse-rest/commit/f9e20bb))
+
 # [2.0.0](https://github.com/smnbbrv/ngx-reverse-rest/compare/v1.0.0...v2.0.0) (2019-02-04)
 
 
